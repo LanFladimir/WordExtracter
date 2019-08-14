@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<exe4j version="6.0.2" transformSequenceNumber="2">
+  <directoryPresets config="C:/Users/Sc_Ji/Desktop/WTE" />
+  <application name="WRE" distributionSourceDir="C:/Users/Sc_Ji/Desktop/WTE">
+    <languages>
+      <principalLanguage id="en" customLocalizationFile="" />
+    </languages>
+  </application>
+  <executable name="WTE" type="2" iconSet="true" iconFile="C:/Users/Sc_Ji/Downloads/docx.ico" executableDir="" redirectStderr="true" stderrFile="error.log" stderrMode="overwrite" redirectStdout="false" stdoutFile="output.log" stdoutMode="overwrite" failOnStderrOutput="true" executableMode="1" changeWorkingDirectory="true" workingDirectory="." singleInstance="false" serviceStartType="2" serviceDependencies="" serviceDescription="" jreLocation="" executionLevel="asInvoker" checkConsoleParameter="false" globalSingleInstance="false" singleInstanceActivate="true" dpiAware="java9+" amd64="true">
+    <messageSet />
+    <versionInfo include="false" fileVersion="" fileDescription="" legalCopyright="" internalName="" productName="" companyName="" productVersion="" />
+  </executable>
+  <splashScreen show="false" width="0" height="0" bitmapFile="" textOverlay="false">
+    <text>
+      <statusLine x="20" y="20" text="" fontSize="8" fontColor="0,0,0" bold="false" />
+      <versionLine x="20" y="40" text="version %VERSION%" fontSize="8" fontColor="0,0,0" bold="false" />
+    </text>
+  </splashScreen>
+  <java mainClass="main.Main" mainMode="1" vmParameters="" arguments="" allowVMPassthroughParameters="true" preferredVM="client" bundleRuntime="true" minVersion="1.8" maxVersion="1.8" allowBetaVM="false" jdkOnly="false">
+    <searchSequence>
+      <registry />
+      <directory location="./jre1.8.0_211" />
+    </searchSequence>
+    <classPath>
+      <archive location="D:/WorkSpace/Scdz/Java/WordExtracter/out/artifacts/WordExtracter/WordExtracter.jar" failOnError="false" />
+      <archive location="D:/WorkSpace/Scdz/Jar/poi-3.17.jar" failOnError="false" />
+      <archive location="D:/WorkSpace/Scdz/Jar/poi-ooxml-3.17.jar" failOnError="false" />
+      <archive location="D:/WorkSpace/Scdz/Jar/poi-scratchpad-3.17.jar" failOnError="false" />
+    </classPath>
+    <modulePath />
+    <nativeLibraryDirectories />
+    <vmOptions />
+  </java>
+  <includedFiles />
+  <unextractableFiles />
+</exe4j>
