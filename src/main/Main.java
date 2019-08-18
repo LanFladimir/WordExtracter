@@ -20,7 +20,7 @@ public class Main extends Application {
             Parent root = FXMLLoader.load(getClass().getResource("main.fxml"));
             primaryStage.setScene(new Scene(root));
             //primaryStage.setResizable(false);
-            primaryStage.setTitle("Word 数据提取工具");
+            primaryStage.setTitle("Office数据提取工具");
             primaryStage.show();
         } catch (IOException e) {
             e.printStackTrace();

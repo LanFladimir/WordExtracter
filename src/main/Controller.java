@@ -1,26 +1,26 @@
 package main;
 
+import bean.SelectFile;
+import bean.WordInfo;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
+import utils.ExcelWriter;
+import utils.WordReader;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-
-import bean.SelectFile;
-import bean.WordInfo;
-import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.FileChooser;
-import utils.ExcelWriter;
-import utils.WordReader;
 
 public class Controller implements Initializable {
     private String wordFileLastPath = "";
@@ -36,9 +36,14 @@ public class Controller implements Initializable {
     private TableView<SelectFile> tv_filelist;
 
     @FXML
-    private Button bt_chooser_word;
+    private Button bt_chooser;
+
     @FXML
-    private Button bt_chooser_pdf;
+    private ComboBox<String> cb_option;
+    private ObservableList<String> cbInfoList = FXCollections.observableArrayList("Word-->Excel", "PDF-->Excel", "Excel-->Excel");
+    @FXML
+    private Label lb_option;
+    private String optionType = "Word-->Excel";
 
     /**
      * chooce files(Office Word/PDF)
@@ -47,19 +52,27 @@ public class Controller implements Initializable {
         FileChooser docChooser = new FileChooser();
 
         if (type == 0) {
-            docChooser.setTitle("选择待筛选Word文档");
+            docChooser.setTitle("选择待解析Word文档");
             docChooser.getExtensionFilters().addAll(
                     new FileChooser.ExtensionFilter("Word Files", "*.doc", "*.docx"),
                     new FileChooser.ExtensionFilter("All Files", "*.*"));
-        } else {
+        } else if (type == 1) {
             docChooser.setTitle("选择PDF文档");
             docChooser.getExtensionFilters().addAll(
                     new FileChooser.ExtensionFilter("Word Files", "*.pdf"),
                     new FileChooser.ExtensionFilter("All Files", "*.*"));
+        } else if (type == 2) {
+            //todo Excel to Excel
+            docChooser.setTitle("选择待解析Excel文档");
+            docChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("Word Files", "*.xlsx"),
+                    new FileChooser.ExtensionFilter("All Files", "*.*"));
+        } else {
+            System.out.println("not match method");
         }
         if (wordFileLastPath.length() != 0)
             docChooser.setInitialDirectory(new File(wordFileLastPath));
-        List<File> list = docChooser.showOpenMultipleDialog(bt_chooser_word.getScene().getWindow());
+        List<File> list = docChooser.showOpenMultipleDialog(tv_filelist.getScene().getWindow());
         if (list != null) {
             fileType = type;
             mSelectFileList.clear();
@@ -97,7 +110,7 @@ public class Controller implements Initializable {
             } else {
                 setExtracterCallBack(2);
             }
-        } else {
+        } else if (fileType == 1) {
             new Thread(() -> {
                 if (mSelectFileList.size() > 0) {
                     Platform.runLater(() -> bt_extracter.setText("导出中..."));
@@ -110,7 +123,7 @@ public class Controller implements Initializable {
                     }
 
                 } else {
-                    Platform.runLater(() -> bt_extracter.setText("无PDF"));
+                    setExtracterCallBack(2);
                 }
                 try {
                     Thread.sleep(1000 * 2);
@@ -118,6 +131,28 @@ public class Controller implements Initializable {
                     e.printStackTrace();
                 }
                 Platform.runLater(() -> bt_extracter.setText("无PDF"));
+            }).start();
+        } else {
+            new Thread(() -> {
+                if (mSelectFileList.size() > 0) {
+                    Platform.runLater(() -> bt_extracter.setText("解析中..."));
+                    try {
+                        ExcelWriter.writePDFExcel(mSelectFileList);
+                        Platform.runLater(() -> bt_extracter.setText("成功"));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Platform.runLater(() -> bt_extracter.setText("失败"));
+                    }
+
+                } else {
+                    setExtracterCallBack(2);
+                }
+                try {
+                    Thread.sleep(1000 * 2);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Platform.runLater(() -> bt_extracter.setText("无Excel"));
             }).start();
         }
     }
@@ -159,8 +194,31 @@ public class Controller implements Initializable {
         tv_filelist.setItems(mTableViewData);
         tv_filelist.getColumns().addAll(fileCol, pathCol);
 
-        bt_chooser_word.setOnAction(event -> chooseFiles(0));
-        bt_chooser_pdf.setOnAction(event -> chooseFiles(1));
+        cb_option.setItems(cbInfoList);
+        cb_option.setPromptText("选择功能类型");
+        cb_option.setValue("Word-->Excel");
+        lb_option.setText("WORD批量提取数据导出Excel");
+        cb_option.valueProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("选择了" + newValue);
+            optionType = newValue;
+
+            switch (optionType) {
+                case "Word-->Excel":
+                    bt_chooser.setOnAction(event -> chooseFiles(0));
+                    lb_option.setText("WORD批量提取数据导出Excel");
+                    break;
+                case "PDF-->Excel":
+                    bt_chooser.setOnAction(event -> chooseFiles(1));
+                    lb_option.setText("PDF文件名导出至Excel");
+                    break;
+                case "Excel-->Excel":
+                    bt_chooser.setOnAction(event -> chooseFiles(2));
+                    lb_option.setText("Excel批量提取数据导出Excel");
+                    break;
+            }
+        });
+
+
         bt_extracter.setOnAction(event -> doExtracter());
     }
 }
