@@ -132,10 +132,10 @@ public class Controller implements Initializable {
                     Platform.runLater(() -> bt_extracter.setText("解析中..."));
                     try {
                         ExcelWriter.ExcelToExcel(mSelectFileList);
-                        setExtracterCallBack(1);
+                        setExtracterCallBack(10);
                     } catch (IOException e) {
                         e.printStackTrace();
-                        setExtracterCallBack(2);
+                        setExtracterCallBack(1);
                     }
                 } else {
                     setExtracterCallBack(2);
