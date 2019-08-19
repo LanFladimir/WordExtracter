@@ -116,44 +116,33 @@ public class Controller implements Initializable {
                     Platform.runLater(() -> bt_extracter.setText("导出中..."));
                     try {
                         ExcelWriter.writePDFExcel(mSelectFileList);
-                        Platform.runLater(() -> bt_extracter.setText("成功"));
+                        setExtracterCallBack(0);
                     } catch (IOException e) {
                         e.printStackTrace();
-                        Platform.runLater(() -> bt_extracter.setText("失败"));
+                        setExtracterCallBack(1);
                     }
 
                 } else {
                     setExtracterCallBack(2);
                 }
-                try {
-                    Thread.sleep(1000 * 2);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Platform.runLater(() -> bt_extracter.setText("无PDF"));
             }).start();
-        } else {
+        } else if (fileType == 2) {
             new Thread(() -> {
                 if (mSelectFileList.size() > 0) {
                     Platform.runLater(() -> bt_extracter.setText("解析中..."));
                     try {
-                        ExcelWriter.writePDFExcel(mSelectFileList);
-                        Platform.runLater(() -> bt_extracter.setText("成功"));
+                        ExcelWriter.ExcelToExcel(mSelectFileList);
+                        setExtracterCallBack(1);
                     } catch (IOException e) {
                         e.printStackTrace();
-                        Platform.runLater(() -> bt_extracter.setText("失败"));
+                        setExtracterCallBack(2);
                     }
-
                 } else {
                     setExtracterCallBack(2);
                 }
-                try {
-                    Thread.sleep(1000 * 2);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Platform.runLater(() -> bt_extracter.setText("无Excel"));
             }).start();
+        } else {
+            System.out.println("oooops");
         }
     }
 
@@ -198,6 +187,8 @@ public class Controller implements Initializable {
         cb_option.setPromptText("选择功能类型");
         cb_option.setValue("Word-->Excel");
         lb_option.setText("WORD批量提取数据导出Excel");
+        bt_chooser.setOnAction(event -> chooseFiles(0));
+
         cb_option.valueProperty().addListener((observable, oldValue, newValue) -> {
             System.out.println("选择了" + newValue);
             optionType = newValue;
@@ -216,6 +207,10 @@ public class Controller implements Initializable {
                     lb_option.setText("Excel批量提取数据导出Excel");
                     break;
             }
+
+            //数据清空
+            mSelectFileList.clear();
+            mTableViewData.clear();
         });
 
 

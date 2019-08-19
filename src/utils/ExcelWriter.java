@@ -3,24 +3,39 @@ package utils;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.filechooser.FileSystemView;
 
 import bean.SelectFile;
 import bean.WordInfo;
+
+import static java.sql.Types.NUMERIC;
 
 /**
  * 写整合后的Excel文件
@@ -262,6 +277,111 @@ public class ExcelWriter {
     private static String getOrderNumber(String filename) {
         String name = filename.split("\\.")[0];
         return name.substring(0, name.length() - 3);
+    }
+    //</editor-fold>
+
+    //<editor-fold desc:"Excel to Excel">
+
+    public static void ExcelToExcel(ArrayList<SelectFile> mSelectFileList) throws IOException {
+        //mk new excel file
+        File outputExcelFile = new File(FileSystemView.getFileSystemView().getHomeDirectory() + File.separator + "台账整理(" + format.format(new Date()) + ").xlsx");
+        Workbook wirteBook = new XSSFWorkbook();
+        Sheet outSheet = wirteBook.createSheet("台账");
+        Row header = outSheet.createRow(0);
+
+        CellStyle headerStyle = wirteBook.createCellStyle(); // 表头单元格样式
+        XSSFFont font = ((XSSFWorkbook) wirteBook).createFont(); // 字体样式
+        font.setFontName("Arial");
+        font.setFontHeightInPoints((short) 16);
+        font.setBold(true);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setFont(font);
+
+        Cell headerCell = header.createCell(0);
+        headerCell.setCellValue("台账信息");//8列
+        headerCell.setCellStyle(headerStyle);
+        CellRangeAddress cra =new CellRangeAddress(0, 0, 0, 8); // 起始行, 终止行, 起始列, 终止列
+        outSheet.addMergedRegion(cra);
+
+        Row firstLine = outSheet.createRow(1);
+        Cell titleCell = firstLine.createCell(0);
+        titleCell.setCellValue("序号");
+        titleCell = firstLine.createCell(1);
+        titleCell.setCellValue("采购订单号");
+        titleCell = firstLine.createCell(2);
+        titleCell.setCellValue("供应商名称");
+        titleCell = firstLine.createCell(3);
+        titleCell.setCellValue("付款（含税）总金额");
+        titleCell = firstLine.createCell(4);
+        titleCell.setCellValue("发票号");
+        titleCell = firstLine.createCell(5);
+        titleCell.setCellValue("备注");
+        titleCell = firstLine.createCell(6);
+        titleCell.setCellValue("登记日期");
+        titleCell = firstLine.createCell(7);
+        titleCell.setCellValue("银行账号");
+        int cellLine = 2;
+
+        //extractor
+        for (SelectFile file : mSelectFileList) {
+            File excelFile = new File(file.getPath());
+            FileInputStream is;
+            Workbook workbook;
+            if (file.getName().endsWith(".xlsx")) {
+                //new excel file
+                is = new FileInputStream(excelFile);
+                workbook = new XSSFWorkbook(is);
+                Sheet sheet = workbook.getSheetAt(0);
+                for (Row row : sheet) {
+                    for (Cell cell : row) {
+
+                    }
+                }
+                int firstRowNum = sheet.getFirstRowNum();
+                int lastRowNum = sheet.getLastRowNum();
+                for (int i = 1; i < lastRowNum; i++) {
+                    int number = firstRowNum + i;
+                    Row row = sheet.getRow(number);
+
+                    System.out.println("number :" + number + "~~订单编号~~" + getCellValue(row.getCell(1)));
+                    System.out.println("number :" + number + "~~总金额~~" + getCellValue(row.getCell(10)));
+                    System.out.println("number :" + number + "~~发票号~~" + getCellValue(row.getCell(20)));
+
+                    Row newrow = outSheet.createRow(cellLine);
+                    newrow.createCell(0).setCellValue(cellLine - 1);//序号
+                    newrow.createCell(1).setCellValue(getCellValue(row.getCell(1)));//采购订单号
+                    newrow.createCell(2).setCellValue("");//供应商名称
+                    newrow.createCell(3).setCellValue(getCellValue(row.getCell(10)));//总金额
+                    newrow.createCell(4).setCellValue(getCellValue(row.getCell(20)));//发票
+                    newrow.createCell(5).setCellValue("");//备注
+                    newrow.createCell(6).setCellValue("");//日期
+                    newrow.createCell(6).setCellValue("");//银行账号
+                    cellLine++;
+                }
+            } else {
+                //old excel file
+            }
+
+            wirteBook.write(new FileOutputStream(outputExcelFile));
+            wirteBook.close();
+        }
+    }
+
+    private static String getCellValue(Cell cell) {
+        String returnValue = "";
+        switch (cell.getCellTypeEnum()) {
+            case NUMERIC:
+                returnValue = cell.getNumericCellValue() + "";
+                break;
+            case STRING:
+                returnValue = cell.getRichStringCellValue().getString();
+                break;
+            case BLANK:
+            case _NONE:
+            case ERROR:
+                returnValue = "--";
+        }
+        return returnValue;
     }
     //</editor-fold>
 }

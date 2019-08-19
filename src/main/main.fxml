@@ -15,11 +15,11 @@
     <children>
       <HBox>
          <children>
-            <Label fx:id="lb_option" prefHeight="30.0" prefWidth="268.0" text="功能说明">
+            <Label fx:id="lb_option" prefHeight="30.0" prefWidth="236.0" text="功能说明">
                <padding>
                   <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
                </padding></Label>
-            <ComboBox fx:id="cb_option" prefHeight="30.0" prefWidth="87.0">
+            <ComboBox fx:id="cb_option" prefHeight="30.0" prefWidth="118.0">
                <padding>
                   <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
                </padding></ComboBox>
