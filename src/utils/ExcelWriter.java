@@ -300,7 +300,7 @@ public class ExcelWriter {
         Cell headerCell = header.createCell(0);
         headerCell.setCellValue("台账信息");//8列
         headerCell.setCellStyle(headerStyle);
-        CellRangeAddress cra =new CellRangeAddress(0, 0, 0, 8); // 起始行, 终止行, 起始列, 终止列
+        CellRangeAddress cra = new CellRangeAddress(0, 0, 0, 8); // 起始行, 终止行, 起始列, 终止列
         outSheet.addMergedRegion(cra);
 
         Row firstLine = outSheet.createRow(1);
@@ -323,6 +323,8 @@ public class ExcelWriter {
         int cellLine = 2;
 
         //extractor
+        ArrayList<WordInfo> orderList = new ArrayList<>();
+        WordInfo info;
         for (SelectFile file : mSelectFileList) {
             File excelFile = new File(file.getPath());
             FileInputStream is;
@@ -332,17 +334,20 @@ public class ExcelWriter {
                 is = new FileInputStream(excelFile);
                 workbook = new XSSFWorkbook(is);
                 Sheet sheet = workbook.getSheetAt(0);
-                for (Row row : sheet) {
-                    for (Cell cell : row) {
-
-                    }
-                }
                 int firstRowNum = sheet.getFirstRowNum();
                 int lastRowNum = sheet.getLastRowNum();
                 for (int i = 1; i < lastRowNum; i++) {
                     int number = firstRowNum + i;
                     Row row = sheet.getRow(number);
+                    //以WrodInfo 暂代Excel台账信息
+                    info = new WordInfo();
+                    info.setOrderNumber(getCellValue(row.getCell(1)));//订单编号
+                    info.setTotalPrice(getCellValue(row.getCell(10)));//总金额
+                    info.setSupplyOrderNumber(getCellValue(row.getCell(20)));//发票号
 
+                    orderList.add(info);
+
+                    /*
                     System.out.println("number :" + number + "~~订单编号~~" + getCellValue(row.getCell(1)));
                     System.out.println("number :" + number + "~~总金额~~" + getCellValue(row.getCell(10)));
                     System.out.println("number :" + number + "~~发票号~~" + getCellValue(row.getCell(20)));
@@ -356,10 +361,37 @@ public class ExcelWriter {
                     newrow.createCell(5).setCellValue("");//备注
                     newrow.createCell(6).setCellValue("");//日期
                     newrow.createCell(6).setCellValue("");//银行账号
-                    cellLine++;
+                    cellLine++;*/
                 }
             } else {
                 //old excel file
+            }
+
+            String lastOrderNumber = "";
+            for (WordInfo wordInfo : orderList) {
+                if (wordInfo.getOrderNumber().length() != 0) {
+                    lastOrderNumber = wordInfo.getOrderNumber();
+                } else {
+                    wordInfo.setOrderNumber(lastOrderNumber);
+                }
+                System.out.println("orderList Excel Item: "
+                        + wordInfo.getOrderNumber() + " | " + wordInfo.getTotalPrice());
+            }
+            orderList = doSumPrice(orderList);
+            for (WordInfo wordInfo : orderList) {
+                System.out.println("Excel Item: " + wordInfo.getOrderNumber() + " | " + wordInfo.getTotalPrice());
+            }
+            for (WordInfo item : orderList) {
+                Row newrow = outSheet.createRow(cellLine);
+                newrow.createCell(0).setCellValue(cellLine - 1);//序号
+                newrow.createCell(1).setCellValue(item.getOrderNumber());//采购订单号
+                newrow.createCell(2).setCellValue("");//供应商名称
+                newrow.createCell(3).setCellValue(String.format("%.2f",Double.valueOf(item.getTotalPrice())));//总金额
+                newrow.createCell(4).setCellValue(item.getSupplyOrderNumber());//发票
+                newrow.createCell(5).setCellValue("");//备注
+                newrow.createCell(6).setCellValue("");//日期
+                newrow.createCell(6).setCellValue("");//银行账号
+                cellLine++;
             }
 
             wirteBook.write(new FileOutputStream(outputExcelFile));
@@ -379,9 +411,48 @@ public class ExcelWriter {
             case BLANK:
             case _NONE:
             case ERROR:
-                returnValue = "--";
+                returnValue = "";
         }
         return returnValue;
     }
+
+    private static ArrayList<WordInfo> doSumPrice(ArrayList<WordInfo> list) {
+        ArrayList<WordInfo> returnList = new ArrayList<>();
+
+        for (WordInfo item : list) {
+            if (ifInList(returnList, item)) {
+                WordInfo info = getTargetItem(returnList, item);
+                if (info == null)
+                    break;
+                float currentPrice = Float.valueOf(info.getTotalPrice());
+                float newPrice = Float.valueOf(item.getTotalPrice());
+                info.setTotalPrice((currentPrice + newPrice) + "");
+            } else {
+                returnList.add(item);
+            }
+        }
+        return returnList;
+    }
+
+    private static boolean ifInList(ArrayList<WordInfo> list, WordInfo item) {
+        boolean isIn = false;
+        for (WordInfo info : list) {
+            if (info.getOrderNumber().equals(item.getOrderNumber())) {
+                isIn = true;
+            }
+        }
+        return isIn;
+    }
+
+    private static WordInfo getTargetItem(ArrayList<WordInfo> list, WordInfo item) {
+        for (WordInfo info : list) {
+            if (info.getOrderNumber().equals(item.getOrderNumber())) {
+                return info;
+            }
+        }
+        return null;
+    }
     //</editor-fold>
+
+
 }
