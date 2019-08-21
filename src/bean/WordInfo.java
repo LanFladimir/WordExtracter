@@ -52,7 +52,7 @@ public class WordInfo {
                 " | 单位" + goodsUnit +
                 " | 含税单价" + notwithPrice +
                 " | 含税总价" + notwithTotalPrice +
-                " | 含税总价" + totalPrice +
+                " | 总价" + totalPrice +
                 " | 交货时间" + deliveryTime;
     }
 

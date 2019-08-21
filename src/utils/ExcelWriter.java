@@ -1,16 +1,12 @@
 package utils;
 
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -21,21 +17,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import javax.swing.filechooser.FileSystemView;
 
 import bean.SelectFile;
 import bean.WordInfo;
-
-import static java.sql.Types.NUMERIC;
 
 /**
  * 写整合后的Excel文件
@@ -322,6 +312,7 @@ public class ExcelWriter {
         titleCell.setCellValue("银行账号");
         int cellLine = 2;
 
+        System.out.println("extract");
         //extractor
         ArrayList<WordInfo> orderList = new ArrayList<>();
         WordInfo info;
@@ -336,112 +327,121 @@ public class ExcelWriter {
                 Sheet sheet = workbook.getSheetAt(0);
                 int firstRowNum = sheet.getFirstRowNum();
                 int lastRowNum = sheet.getLastRowNum();
+                //System.out.println("firstRowNum= " + firstRowNum);
+                //System.out.println("lastRowNum= " + lastRowNum);
+                String lastOrderNumber = "";
                 for (int i = 1; i < lastRowNum; i++) {
                     int number = firstRowNum + i;
                     Row row = sheet.getRow(number);
+                    if (row == null) {
+                        continue;
+                    }
+                    Cell cell_Order = row.getCell(1);
+                    Cell cell_Total = row.getCell(10);
+                    Cell cell_Supply = row.getCell(20);
+                    //System.out.println("------------------------------------" + number + "------------------------------------");
+                    //System.out.println("序号：" + getCellValue(row.getCell(0)));
+                    //System.out.println((row != null) ? "row 不为空" : "row 空");
+                    //System.out.println((row.getCell(1) != null) ? "cell 1 不为空" : "cell 1 空");
+                    //System.out.println((row.getCell(10) != null) ? "cell 10 不为空" : "cell 10 空");
+                    //System.out.println((row.getCell(20) != null) ? "cell 20 不为空" : "cell 20 空");
+                    //System.out.println("-----------------------------------------------------------------------------");
                     //以WrodInfo 暂代Excel台账信息
                     info = new WordInfo();
-                    info.setOrderNumber(getCellValue(row.getCell(1)));//订单编号
-                    info.setTotalPrice(getCellValue(row.getCell(10)));//总金额
-                    info.setSupplyOrderNumber(getCellValue(row.getCell(20)));//发票号
+                    if (cell_Order == null)
+                        info.setOrderNumber(lastOrderNumber);
+                    else {
+                        //System.out.println("orderNumber " + cell_Order.getRichStringCellValue().getString() + "~~~" + getCellValue(cell_Order));
+                        //info.setOrderNumber(cell_Order.getRichStringCellValue().getString());//订单编号
+                        cell_Order.setCellType(CellType.STRING);
+                        lastOrderNumber = getCellValue(cell_Order);
+                        info.setOrderNumber(lastOrderNumber);//订单编号
+                    }
+                    if (cell_Total == null)
+                        info.setTotalPrice("0.00");
+                    else
+                        info.setTotalPrice(getCellValue(cell_Total));//总金额
+                    if (cell_Supply == null)
+                        info.setSupplyOrderNumber("--");//发票号
+                    else
+                        info.setSupplyOrderNumber(getCellValue(cell_Supply));//发票号
 
                     orderList.add(info);
-
-                    /*
-                    System.out.println("number :" + number + "~~订单编号~~" + getCellValue(row.getCell(1)));
-                    System.out.println("number :" + number + "~~总金额~~" + getCellValue(row.getCell(10)));
-                    System.out.println("number :" + number + "~~发票号~~" + getCellValue(row.getCell(20)));
-
-                    Row newrow = outSheet.createRow(cellLine);
-                    newrow.createCell(0).setCellValue(cellLine - 1);//序号
-                    newrow.createCell(1).setCellValue(getCellValue(row.getCell(1)));//采购订单号
-                    newrow.createCell(2).setCellValue("");//供应商名称
-                    newrow.createCell(3).setCellValue(getCellValue(row.getCell(10)));//总金额
-                    newrow.createCell(4).setCellValue(getCellValue(row.getCell(20)));//发票
-                    newrow.createCell(5).setCellValue("");//备注
-                    newrow.createCell(6).setCellValue("");//日期
-                    newrow.createCell(6).setCellValue("");//银行账号
-                    cellLine++;*/
                 }
             } else {
                 //old excel file
             }
-
-            String lastOrderNumber = "";
-            for (WordInfo wordInfo : orderList) {
-                if (wordInfo.getOrderNumber().length() != 0) {
-                    lastOrderNumber = wordInfo.getOrderNumber();
-                } else {
-                    wordInfo.setOrderNumber(lastOrderNumber);
-                }
-                System.out.println("orderList Excel Item: "
-                        + wordInfo.getOrderNumber() + " | " + wordInfo.getTotalPrice());
-            }
-            orderList = doSumPrice(orderList);
-            for (WordInfo wordInfo : orderList) {
-                System.out.println("Excel Item: " + wordInfo.getOrderNumber() + " | " + wordInfo.getTotalPrice());
-            }
-            for (WordInfo item : orderList) {
-                Row newrow = outSheet.createRow(cellLine);
-                newrow.createCell(0).setCellValue(cellLine - 1);//序号
-                newrow.createCell(1).setCellValue(item.getOrderNumber());//采购订单号
-                newrow.createCell(2).setCellValue("");//供应商名称
-                newrow.createCell(3).setCellValue(String.format("%.2f",Double.valueOf(item.getTotalPrice())));//总金额
-                newrow.createCell(4).setCellValue(item.getSupplyOrderNumber());//发票
-                newrow.createCell(5).setCellValue("");//备注
-                newrow.createCell(6).setCellValue("");//日期
-                newrow.createCell(6).setCellValue("");//银行账号
-                cellLine++;
-            }
-
-            wirteBook.write(new FileOutputStream(outputExcelFile));
-            wirteBook.close();
         }
+
+        System.out.println("format list");
+        /*String lastOrderNumber = "";
+        for (WordInfo wordInfo : orderList) {
+            //System.out.println("OrderNumber = " + wordInfo.getOrderNumber() + " | length = " + wordInfo.getOrderNumber().length());
+            if (wordInfo.getOrderNumber().length() != 0) {
+                lastOrderNumber = wordInfo.getOrderNumber();
+            } else {
+                wordInfo.setOrderNumber(lastOrderNumber);
+            }
+        }*/
+        orderList = doSumPrice(orderList);
+
+        System.out.println("write excel");
+        for (WordInfo item : orderList) {
+            Row newrow = outSheet.createRow(cellLine);
+            newrow.createCell(0).setCellValue(cellLine - 1);//序号
+            newrow.createCell(1).setCellValue(item.getOrderNumber());//采购订单号
+            newrow.createCell(2).setCellValue("");//供应商名称
+            //System.out.println("Double value of: " + String.format("%.2f", Double.valueOf(item.getTotalPrice())));
+            newrow.createCell(3).setCellValue(Double.valueOf(String.format("%.2f", Double.valueOf(item.getTotalPrice()))));//总金额
+            newrow.createCell(4).setCellValue(item.getSupplyOrderNumber());//发票
+            newrow.createCell(5).setCellValue("");//备注
+            newrow.createCell(6).setCellValue("");//日期
+            newrow.createCell(6).setCellValue("");//银行账号
+            cellLine++;
+        }
+
+        wirteBook.write(new FileOutputStream(outputExcelFile));
+        wirteBook.close();
     }
 
     private static String getCellValue(Cell cell) {
         String returnValue = "";
-        switch (cell.getCellTypeEnum()) {
-            case NUMERIC:
-                returnValue = cell.getNumericCellValue() + "";
-                break;
-            case STRING:
-                returnValue = cell.getRichStringCellValue().getString();
-                break;
-            case BLANK:
-            case _NONE:
-            case ERROR:
-                returnValue = "";
-        }
+        if (cell != null)
+            switch (cell.getCellTypeEnum()) {
+                case NUMERIC:
+                    returnValue = cell.getNumericCellValue() + "";
+                    break;
+                case STRING:
+                    returnValue = cell.getRichStringCellValue().getString();
+                    break;
+                case BLANK:
+                case _NONE:
+                case ERROR:
+                    returnValue = "";
+            }
+        else returnValue = "";
         return returnValue;
     }
 
     private static ArrayList<WordInfo> doSumPrice(ArrayList<WordInfo> list) {
         ArrayList<WordInfo> returnList = new ArrayList<>();
 
-        for (WordInfo item : list) {
-            if (ifInList(returnList, item)) {
-                WordInfo info = getTargetItem(returnList, item);
-                if (info == null)
-                    break;
-                float currentPrice = Float.valueOf(info.getTotalPrice());
-                float newPrice = Float.valueOf(item.getTotalPrice());
-                info.setTotalPrice((currentPrice + newPrice) + "");
+        for (WordInfo itemInOrderList : list) {
+            WordInfo itemInReturnList = getTargetItem(returnList, itemInOrderList);
+            if (itemInReturnList != null) {
+                try {
+                    float currentPrice = Float.valueOf(itemInReturnList.getTotalPrice());
+                    float newPrice = Float.valueOf((itemInOrderList.getTotalPrice().equals("") ? "0.00" : itemInOrderList.getTotalPrice()));
+                    itemInReturnList.setTotalPrice((currentPrice + newPrice) + "");
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    System.out.println("NumberFormatException" + itemInReturnList.getTotalPrice() + " | " + itemInOrderList.getTotalPrice());
+                }
             } else {
-                returnList.add(item);
+                returnList.add(itemInOrderList);
             }
         }
         return returnList;
-    }
-
-    private static boolean ifInList(ArrayList<WordInfo> list, WordInfo item) {
-        boolean isIn = false;
-        for (WordInfo info : list) {
-            if (info.getOrderNumber().equals(item.getOrderNumber())) {
-                isIn = true;
-            }
-        }
-        return isIn;
     }
 
     private static WordInfo getTargetItem(ArrayList<WordInfo> list, WordInfo item) {
@@ -453,6 +453,4 @@ public class ExcelWriter {
         return null;
     }
     //</editor-fold>
-
-
 }
