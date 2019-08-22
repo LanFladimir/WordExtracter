@@ -354,7 +354,8 @@ public class ExcelWriter {
                         //System.out.println("orderNumber " + cell_Order.getRichStringCellValue().getString() + "~~~" + getCellValue(cell_Order));
                         //info.setOrderNumber(cell_Order.getRichStringCellValue().getString());//订单编号
                         cell_Order.setCellType(CellType.STRING);
-                        lastOrderNumber = getCellValue(cell_Order);
+                        if (getCellValue(cell_Order).length() != 0)
+                            lastOrderNumber = getCellValue(cell_Order);
                         info.setOrderNumber(lastOrderNumber);//订单编号
                     }
                     if (cell_Total == null)
@@ -363,9 +364,10 @@ public class ExcelWriter {
                         info.setTotalPrice(getCellValue(cell_Total));//总金额
                     if (cell_Supply == null)
                         info.setSupplyOrderNumber("--");//发票号
-                    else
+                    else {
+                        cell_Supply.setCellType(CellType.STRING);
                         info.setSupplyOrderNumber(getCellValue(cell_Supply));//发票号
-
+                    }
                     orderList.add(info);
                 }
             } else {
